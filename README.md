@@ -1,4 +1,4 @@
 # MMFusion
 A unified framework for exploring multimodal fusion strategies in large multimodal models
 
-Code is comming soon!!!
+The scripts and more details will be released after acceptance.
