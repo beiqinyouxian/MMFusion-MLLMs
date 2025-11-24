@@ -24,6 +24,7 @@ ATTENTION_TYPE="rel" # orin rel
 # MODEL_PATH='/data/VLM/Qwen2-VL-7B'
 # MODEL_PATH='/data/VLM/Qwen2-VL-7B-Instruct' 
 # MODEL_PATH="/data/VLM/deepseek-vl2-tiny"
+MODEL_PATH="/data/VLM/deepseek-vl2-small"
 # MODEL_PATH="/data/VLM/deepseek-vl-7b-chat"
 # MODEL_PATH="/data/VLM/InternVL2_5-4B"   
 

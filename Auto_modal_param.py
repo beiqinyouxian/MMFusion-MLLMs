@@ -161,8 +161,12 @@ def generate_all_head_attention_map(model, processor, image, object, label, atte
             att_results,eval_results = norm_res(model_methods.qwen2_methods.auto_param_rel_attention_qwen2, image, prompt, general_prompt, model, processor, label, LAYERS, HEADS)
 
     elif model_type == "deepseek_vl2":
-        LAYERS=12
-        HEADS=10
+        if "tiny" in args.model_path:
+            LAYERS=12
+            HEADS=10
+        elif "small" in args.model_path:
+            LAYERS=26
+            HEADS=16
         prompt = f"{object}"
         general_prompt = f"Write a general description of the image. Answer the question using a single word or phrase."
         if attention_type=="orin":
@@ -365,8 +369,8 @@ if __name__ == "__main__":
     res_img={}
     result=[]
     model_name = (args.model_path).split('/')[-1]
-    vi_json_file = f'./8_27_auto_param_result/{model_name}_{model_type}_{dataset_name}_{args.eval_type}_{args.attention_type}_vi.json'
-    ir_json_file = f'./8_27_auto_param_result/{model_name}_{model_type}_{dataset_name}_{args.eval_type}_{args.attention_type}_ir.json'
+    vi_json_file = f'./auto_param_result/{model_name}_{model_type}_{dataset_name}_{args.eval_type}_{args.attention_type}_vi.json'
+    ir_json_file = f'./auto_param_result/{model_name}_{model_type}_{dataset_name}_{args.eval_type}_{args.attention_type}_ir.json'
     if os.path.exists(vi_json_file):
         os.remove(vi_json_file)
     if os.path.exists(ir_json_file):

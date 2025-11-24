@@ -7,11 +7,12 @@ import io
 import base64
 from PIL import Image
 
-IMAGE_TOKEN_INDEX=128815
+IMAGE_TOKEN_INDEX=128815 # tiny
+# IMAGE_TOKEN_INDEX=100003 # small
 NUM_IMG_TOKENS = 1024
 NUM_PATCHES = 32
-ATT_LAYER = 12
-ATT_HEAD=10
+# ATT_LAYER = 12
+# ATT_HEAD=10
 IMAGE_RESOLUTION=None
 
 
@@ -27,7 +28,7 @@ def split_model(model_name):
     device_map = {}
     model_splits = {        
         '/data/VLM/deepseek-vl2-tiny': [3, 4, 4, 4], # 2 GPU
-        '/data/VLM/deepseek-vl2-small': [13, 14], # 2 GPU 
+        '/data/VLM/deepseek-vl2-small': [6, 8, 8, 8], # 4 GPU 
         # '/data/VLM/deepseek-vl2': [10,10,10], # 3 GPU
         '/data/VLM/deepseek-vl2': [6, 8, 8, 8], # 4 GPU
     }

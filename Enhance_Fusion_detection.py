@@ -227,11 +227,20 @@ def generate_specific_attention_map(model, processor, image, object, label, atte
             att_results = specific_norm_res(model_methods.qwen2_methods.auto_param_rel_attention_qwen2, image, prompt, general_prompt, model, processor, label, LAYERS, HEADS, items)
 
     elif model_type == "deepseek_vl2":
-        LAYERS=12
-        HEADS=10
-        # items=["8_6","7_5","10_1","7_10","9_8","10_7"]
-        vi_items=["9_6","1_1","4_2","8_4","2_6","11_6","10_6","9_2","7_8","10_2"][:numofheads]
-        ir_items=["9_6","4_2","2_6","8_4","10_6","11_6","11_3","7_7","4_7","7_8"][:numofheads]
+        if "tiny" in args.model_path:
+            LAYERS=12
+            HEADS=10
+        elif "small" in args.model_path:
+            LAYERS=26
+            HEADS=16
+            
+        if model_name == "deepseek-vl2-tiny":
+            # items=["8_6","7_5","10_1","7_10","9_8","10_7"]
+            vi_items=["9_6","1_1","4_2","8_4","2_6","11_6","10_6","9_2","7_8","10_2"][:numofheads]
+            ir_items=["9_6","4_2","2_6","8_4","10_6","11_6","11_3","7_7","4_7","7_8"][:numofheads]
+        elif model_name == "deepseek-vl2-small":
+            vi_items=["6-5","4-5","18-13","9-3","25-14","4-14","2-10","6-2","3-1","18-4"][:numofheads]
+            ir_items=["6-5","9-3","18-4","4-5","20-1","18-13","6-2","1-15","10-12","19-12"][:numofheads]
 
         if image_type=="vi":
             items=vi_items

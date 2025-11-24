@@ -1,13 +1,14 @@
 import os
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 import torch
-from deepseekvl2_methods import *
+from model_methods.deepseekvl2_methods import *
 def split_model(model_name):
     device_map = {}
     # 3b,16b,27b
     model_splits = {        
         '/data/VLM/deepseek-vl2-tiny': [3, 4, 4, 4], # 2 GPU
-        '/data/VLM/deepseek-vl2-small': [13, 14], # 2 GPU 
+        # '/data/VLM/deepseek-vl2-small': [13, 14], # 2 GPU 
+        '/data/VLM/deepseek-vl2-small': [6, 8, 8, 8], # 2 GPU 
         # '/data/VLM/deepseek-vl2': [10,10,10], # 3 GPU
         '/data/VLM/deepseek-vl2': [6, 8, 8, 8], # 4 GPU
     }
@@ -44,7 +45,7 @@ def load_model(model_path, dtype=torch.bfloat16):
 
 
 if __name__=="__main__":
-    _,vl_gpt,vl_chat_processor=load_model("/data/VLM/deepseek-vl2-tiny")
+    _,vl_gpt,vl_chat_processor=load_model("/data/VLM/deepseek-vl2-small")
     print(vl_gpt)
     import time
 
