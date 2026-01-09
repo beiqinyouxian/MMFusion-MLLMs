@@ -14,6 +14,16 @@ def auto_otsu(image):
     binary = binary_uint8 / 255.0
     return binary
 
+def auto_otsu_softmax(image):
+    image_flat = image.flatten()
+    exp_image = np.exp(image_flat - np.max(image_flat))  
+    softmax_image = exp_image / np.sum(exp_image)
+    softmax_image = softmax_image.reshape(image.shape)
+    softmax_uint8 = (softmax_image * 255).astype(np.uint8)
+    _, binary_uint8 = cv2.threshold(softmax_uint8, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    binary = binary_uint8 / 255.0
+    return binary
+
 def adaptive_threshold(image):
     image_uint8 = (image * 255).astype(np.uint8)
     

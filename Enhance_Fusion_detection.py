@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 import model_methods
 from transformers import AutoModel, AutoTokenizer
+from Auto_threshold import *
 model_type_to_module = {
     "qwen2.5vl": "model_methods.qwen2_5_methods",
     "qwen2vl": "model_methods.qwen2_methods",
