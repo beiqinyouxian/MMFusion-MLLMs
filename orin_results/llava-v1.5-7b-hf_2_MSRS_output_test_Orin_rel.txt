@@ -1,0 +1,14 @@
+all_inference:1251
+['/data/VLM/llava-v1.5-7b-hf', 29.32, 14.88, 9.93, 29.32]
+all_inference:1251
+['/data/VLM/llava-v1.5-7b-hf', 29.32, 14.88, 9.93, 29.32]
+all_inference:1251
+['/data/VLM/llava-v1.5-7b-hf', 29.32, 14.88, 9.93, 29.32]
+all_inference:1251
+['/data/VLM/llava-v1.5-7b-hf', 29.32, 14.88, 9.93, 29.32]
+all_inference:1251
+['/data/VLM/llava-v1.5-7b-hf', 29.32, 14.88, 9.93, 29.32]
+all_inference:1251
+['/data/VLM/llava-v1.5-7b-hf', 29.32, 14.88, 9.93, 29.32]
+all_inference:1251
+['/data/VLM/llava-v1.5-7b-hf', 29.32, 14.88, 9.93, 29.32]

@@ -1,0 +1,2 @@
+all_inference:1315
+['/data/VLM/Qwen2-VL-7B', 36.39, 52.05, 21.15, 33.15]

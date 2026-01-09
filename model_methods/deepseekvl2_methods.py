@@ -7,8 +7,8 @@ import io
 import base64
 from PIL import Image
 
-IMAGE_TOKEN_INDEX=128815 # tiny
-# IMAGE_TOKEN_INDEX=100003 # small
+# IMAGE_TOKEN_INDEX=128815 # tiny
+IMAGE_TOKEN_INDEX=100003 # small
 NUM_IMG_TOKENS = 1024
 NUM_PATCHES = 32
 # ATT_LAYER = 12
@@ -25,6 +25,7 @@ def pil_image_to_data_url(image: Image.Image, format="PNG"):
     return data_url
 
 def split_model(model_name):
+    global IMAGE_TOKEN_INDEX
     device_map = {}
     model_splits = {        
         '/data/VLM/deepseek-vl2-tiny': [3, 4, 4, 4], # 2 GPU
@@ -32,6 +33,10 @@ def split_model(model_name):
         # '/data/VLM/deepseek-vl2': [10,10,10], # 3 GPU
         '/data/VLM/deepseek-vl2': [6, 8, 8, 8], # 4 GPU
     }
+    if "tiny" in model_name:
+        IMAGE_TOKEN_INDEX=128815 # tiny
+    elif "small" in model_name:
+        IMAGE_TOKEN_INDEX=100003 # small
     num_layers_per_gpu = model_splits[model_name]
     num_layers = sum(num_layers_per_gpu)
     layer_cnt = 0

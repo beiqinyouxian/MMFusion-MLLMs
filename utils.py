@@ -18,7 +18,7 @@ def encode_base64(image):
 
 
 
-def high_pass_filter(image, resolusion, km=7, kh=3, reduce=True):
+def high_pass_filter(image, resolusion, km=7, kh=3, sigma=None, reduce=True, block=14):
     """
     Applies a high-pass filter to an image to highlight edges and fine details.
     
@@ -38,12 +38,12 @@ def high_pass_filter(image, resolusion, km=7, kh=3, reduce=True):
 
     image = TF.resize(image, (resolusion, resolusion))
     image = TF.to_tensor(image).unsqueeze(0)
-    l = TF.gaussian_blur(image, kernel_size=(kh, kh)).squeeze().detach().cpu().numpy()
+    l = TF.gaussian_blur(image, kernel_size=(kh, kh), sigma=sigma).squeeze().detach().cpu().numpy()
     h = image.squeeze().detach().cpu().numpy() - l
     h_brightness = np.sqrt(np.square(h).sum(axis=0))
     h_brightness = median_filter(h_brightness, size=km)
     if reduce:
-        h_brightness = block_reduce(h_brightness, block_size=(14, 14), func=np.sum)
+        h_brightness = block_reduce(h_brightness, block_size=(block, block), func=np.sum)
 
     return h_brightness
 
@@ -333,7 +333,7 @@ class Evaluation_processor:
             
         if not np.all(np.logical_or(self.att_map == 0, self.att_map == 1)):
             raise ValueError("att_map必须只包含0和1")
-    # 交叉熵损失
+    # 注意力准确度
     def calculate_Entropy(self, attention_map):
         mul = np.multiply(self.ref_map, attention_map)
         sum_mul = np.sum(mul)
@@ -401,6 +401,8 @@ def specific_norm_res(map_func, image, prompt, general_prompt, model, processor,
             att_item = resize_with_interpolation(value,image_square.size)
             # 高斯模糊
             block_att = gaussian_filter(att_item, sigma=1, mode='reflect')
+
+            # block_att=att_item
 
             right_att_map = square_array_to_orin(block_att,image.size)
             # 进行归一化 

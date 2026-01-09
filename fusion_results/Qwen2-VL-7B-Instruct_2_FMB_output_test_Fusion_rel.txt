@@ -1,0 +1,8 @@
+all_inference:2602
+['/data/VLM/Qwen2-VL-7B-Instruct', 83.91, 13.85, 23.11, 86.84]
+all_inference:2602
+['/data/VLM/Qwen2-VL-7B-Instruct', 83.91, 13.83, 23.07, 86.87]
+all_inference:2602
+['/data/VLM/Qwen2-VL-7B-Instruct', 83.94, 14.36, 23.83, 86.76]
+all_inference:2602
+['/data/VLM/Qwen2-VL-7B-Instruct', 83.92, 14.02, 23.35, 86.79]

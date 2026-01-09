@@ -1,0 +1,2 @@
+all_inference:2602
+['/data/VLM/Qwen2-VL-2B-Instruct', 88.71, 7.12, 13.07, 88.79]

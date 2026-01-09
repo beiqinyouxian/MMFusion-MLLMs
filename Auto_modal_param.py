@@ -217,7 +217,7 @@ def append_to_json_lines(new_dict, filename):
 
 
 class SegmentationLabelProcessor:
-    def __init__(self,dataset_path):
+    def __init__(self,dataset_path, scene):
         if "MSRS" in dataset_path:
             self.dataset_type= "MSRS" 
         elif "MFNet" in dataset_path:
@@ -232,6 +232,18 @@ class SegmentationLabelProcessor:
         self.vi_path = os.path.join(dataset_path,"vi")
         self.label_path = os.path.join(dataset_path,"Segmentation_labels")
         self.file_list = os.listdir(self.label_path)
+        # 根据scene参数过滤文件列表
+        if scene == "DAY":
+            # 只保留文件名末尾为D结尾的文件，例如：00020D.png
+            self.file_list = [f for f in self.file_list if f.endswith('D.png') or f.endswith('D.jpg') or f.endswith('D.jpeg')]
+        elif scene == "NIGHT":
+            # 只保留文件名末尾为N结尾的文件
+            self.file_list = [f for f in self.file_list if f.endswith('N.png') or f.endswith('N.jpg') or f.endswith('N.jpeg')]
+        elif scene == "ALL":
+            # 保持现在的逻辑，不进行过滤
+            pass
+        else:
+            print(f"Warning: Unknown scene parameter '{scene}', using all files.")
 
     def __getitem__(self,item):
         file_name = self.file_list[item]
@@ -302,6 +314,7 @@ if __name__ == "__main__":
     parser.add_argument('--threshold', type=float, help='Threshold value')
     parser.add_argument('--dataset', help='Dataset name')
     parser.add_argument('--objects', help='Split method')
+    parser.add_argument('--scene', help='Scene type')
     parser.add_argument('--eval_type', help='Evaluation type')
     parser.add_argument('--attention_type', help='Attention type')
     parser.add_argument('--model_path', help='Path to the model')
@@ -314,6 +327,7 @@ if __name__ == "__main__":
     print("threshold:", args.threshold)
     print("dataset:", args.dataset)
     print("objects:", args.objects)
+    print("scene:", args.scene)
     print("attention_type:", args.attention_type)
     print("eval_type:", args.eval_type)
     print("model_path:", args.model_path)
@@ -364,19 +378,19 @@ if __name__ == "__main__":
 
     # 加载数据集
     dataset_path = os.path.join(args.data_root,args.dataset)    
-    dataset_processor = SegmentationLabelProcessor(dataset_path)
+    dataset_processor = SegmentationLabelProcessor(dataset_path, args.scene)
     dataset_name = os.path.basename(os.path.normpath(args.data_root))
     res_img={}
     result=[]
     model_name = (args.model_path).split('/')[-1]
-    vi_json_file = f'./auto_param_result/{model_name}_{model_type}_{dataset_name}_{args.eval_type}_{args.attention_type}_vi.json'
-    ir_json_file = f'./auto_param_result/{model_name}_{model_type}_{dataset_name}_{args.eval_type}_{args.attention_type}_ir.json'
+    vi_json_file = f'./{args.scene}_auto_param_result/{model_name}_{model_type}_{dataset_name}_{args.eval_type}_{args.attention_type}_vi.json'
+    ir_json_file = f'./{args.scene}_auto_param_result/{model_name}_{model_type}_{dataset_name}_{args.eval_type}_{args.attention_type}_ir.json'
     if os.path.exists(vi_json_file):
         os.remove(vi_json_file)
     if os.path.exists(ir_json_file):
         os.remove(ir_json_file)
     # 按图片进行遍历检测，单张图片把所有的目标都检测出来
-    LIMIT = 100
+    LIMIT = 80
     print(f"length of dataset_processor:{len(dataset_processor)}")
     NUM = len(dataset_processor) if len(dataset_processor) < LIMIT else LIMIT
     for item in tqdm(range(NUM), desc="Processing images"): #2D array类型数据

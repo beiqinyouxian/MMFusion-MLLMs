@@ -1,0 +1,2 @@
+all_inference:1251
+['/data/VLM/llava-v1.5-7b-hf', 37.69, 30.65, 15.19, 34.84]

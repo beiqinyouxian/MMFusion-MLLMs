@@ -102,7 +102,7 @@ import cv2
 import numpy as np
 
 
-def generate_specific_attention_map(model, processor, image, object, label, attention_type, model_type, image_type):
+def generate_specific_attention_map(model, processor, image, object, label, attention_type, model_type, image_type, scene):
     vi_items=[]
     ir_items=[]
     items=[]
@@ -124,16 +124,35 @@ def generate_specific_attention_map(model, processor, image, object, label, atte
             # items=["14_24","14_20","14_3"]
             # items=["14_24","14_13","14_26","18_10","17_11"][:numofheads] #CVPR top
             # acc TOP
-            vi_items=["11_17","14_3","14_26","18_10","14_20","10_29","17_18","14_24","17_11","17_13"][:numofheads]
-            ir_items=["14_26","11_17","14_3","10_29","14_24","17_18","17_11","14_20","18_10","11_14"][:numofheads]
+            # vi_items=["11_17","14_3","14_26","18_10","14_20","10_29","17_18","14_24","17_11","17_13"][:numofheads]
+            # ir_items=["14_26","11_17","14_3","10_29","14_24","17_18","17_11","14_20","18_10","11_14"][:numofheads]
+            if scene == "DAY":
+                vi_items=["11_17", "14_26", "14_3", "17_18", "14_24", "17_11"][:numofheads]
+                ir_items=["14_26", "10_29", "11_17", "14_3", "17_18", "18_10"][:numofheads]
+            elif scene == "NIGHT":
+                vi_items=["11_17", "14_3", "10_29", "14_20", "14_26", "14_24"][:numofheads]
+                ir_items=["14_26", "10_29", "14_3", "11_17", "14_24", "14_20"][:numofheads]
+            else:
+                print("ERROR in scene. Please check the scene.")
+                exit()
+
         elif model_name == "llava-1.5-13b-hf":
             # items=["13_17","13_21","15_2"]
             # vi_items=["13_17","13_21","16_2","17_19","15_2","16_20","15_26","14_20","14_21","17_2"][:numofheads]
             # ir_items=["15_2","13_17","13_21","16_20","14_21","16_2","15_26","14_20","16_25","12_20"][:numofheads]
 
-            vi_items=["13_17", "16_30", "13_21", "11_37", "16_31", "16_2", "15_39", "17_19", "15_2", "16_20"][:numofheads]
-            ir_items=["16_30", "15_2", "15_39", "13_17", "13_21", "11_37", "16_20", "16_31", "14_21", "16_2"][:numofheads]
-
+            # vi_items=["13_17", "16_30", "13_21", "11_37", "16_31", "16_2", "15_39", "17_19", "15_2", "16_20"][:numofheads]
+            # ir_items=["16_30", "15_2", "15_39", "13_17", "13_21", "11_37", "16_20", "16_31", "14_21", "16_2"][:numofheads]
+            
+            if scene == "DAY":
+                vi_items=["13_17", "16_30", "11_37", "13_21", "15_39", "16_31"][:numofheads]
+                ir_items=["16_30", "13_17", "15_39", "15_2", "11_37", "16_2"][:numofheads]
+            elif scene == "NIGHT":
+                vi_items=["13_17", "16_30", "13_21", "16_31", "11_37", "14_21"][:numofheads]
+                ir_items=["16_30", "13_21", "15_39", "13_17", "15_2", "11_37"][:numofheads]
+            else:
+                print("ERROR in scene. Please check the scene.")
+                exit()
         if image_type=="vi":
             items=vi_items
         else:
@@ -169,15 +188,33 @@ def generate_specific_attention_map(model, processor, image, object, label, atte
         if model_name == "Qwen2.5-VL-3B-Instruct":
             # items=["24_4","27_7","23_1","25_14","21_13"，"25_8"]
             # acc TOP
-            vi_items=["27_7","25_8","27_2","20_7","27_0","25_14","20_7","23_0","20_1","29_3"][:numofheads]
-            ir_items=["27_7","27_2","27_0","20_7","20_4","22_15","20_1","23_0","22_13","25_8"][:numofheads]
+            # vi_items=["27_7","25_8","27_2","20_7","27_0","25_14","20_7","23_0","20_1","29_3"][:numofheads]
+            # ir_items=["27_7","27_2","27_0","20_7","20_4","22_15","20_1","23_0","22_13","25_8"][:numofheads]
+
+            if scene == "DAY":
+                vi_items=["27_7", "25_8", "27_2", "20_4", "25_14", "26_12"][:numofheads]
+                ir_items=["27_2", "27_7", "27_0", "20_7", "20_4", "20_1"][:numofheads]
+            elif scene == "NIGHT":
+                vi_items=["27_7", "20_4", "25_8", "27_2", "27_0", "20_1"][:numofheads]
+                ir_items=["27_7", "27_2", "20_4", "20_7", "27_0", "22_15"][:numofheads]
+            else:
+                print("ERROR in scene. Please check the scene.")
+                exit()
       
         elif model_name == "Qwen2.5-VL-7B-Instruct":
             # items=["19_20","19_23","21_25","19_16","18_16","19_22"]
             # acc TOP
-            vi_items=["19_20","19_16","19_22","19_23","19_21","19_17","19_25","19_19","20_16","19_15"][:numofheads]
-            ir_items=["19_21","19_23","19_20","19_16","18_16","21_26","19_25","17_27","19_22","19_17"][:numofheads]
-        
+            # vi_items=["19_20","19_16","19_22","19_23","19_21","19_17","19_25","19_19","20_16","19_15"][:numofheads]
+            # ir_items=["19_21","19_23","19_20","19_16","18_16","21_26","19_25","17_27","19_22","19_17"][:numofheads]
+            if scene == "DAY":
+                vi_items=["19_20", "19_22", "19_23", "19_21", "19_16", "19_25"][:numofheads]
+                ir_items=["19_20", "19_21", "17_27", "19_25", "21_26", "19_16"][:numofheads]
+            elif scene == "NIGHT":
+                vi_items=["19_20", "19_16", "19_22", "19_17", "19_23", "19_21"][:numofheads]
+                ir_items=["19_17", "19_21", "19_23", "19_20", "21_25", "19_22"][:numofheads]
+            else:
+                print("ERROR in scene. Please check the scene.")
+                exit()
         if image_type=="vi":
             items=vi_items
         else:
@@ -199,19 +236,56 @@ def generate_specific_attention_map(model, processor, image, object, label, atte
             HEADS=12
 
         if model_name == "Qwen2-VL-2B":
-            vi_items=["17_1", "19_8", "17_5", "19_6", "20_5", "19_9", "20_1", "17_2", "20_0", "17_4"][:numofheads]
-            ir_items=["19_6", "20_0", "14_9", "19_8", "17_2", "12_7", "14_10", "17_5", "17_1", "22_5"][:numofheads]
+            # vi_items=["17_1", "19_8", "17_5", "19_6", "20_5", "19_9", "20_1", "17_2", "20_0", "17_4"][:numofheads]
+            # ir_items=["19_6", "20_0", "14_9", "19_8", "17_2", "12_7", "14_10", "17_5", "17_1", "22_5"][:numofheads]
+            if scene == "DAY":
+                vi_items=["17_1", "17_4", "19_9", "17_5", "21_11", "20_1"][:numofheads]
+                ir_items=["14_9", "20_0", "17_2", "19_6", "14_10", "19_8"][:numofheads]
+            elif scene == "NIGHT":
+                vi_items=["17_1", "17_4", "17_2", "17_5", "21_11", "19_8"][:numofheads]
+                ir_items=["20_0", "14_10", "14_9", "19_6", "20_11", "17_2"][:numofheads]
+            else:
+                print("ERROR in scene. Please check the scene.")
+                exit()
+
         elif model_name == "Qwen2-VL-2B-Instruct":
-           vi_items=["19_9", "17_5", "20_5", "14_7", "19_6", "17_2", "14_9", "19_10", "20_0", "17_4"][:numofheads]
-           ir_items=["20_5", "19_9", "17_5", "14_9", "14_7", "20_10", "19_6", "17_2", "17_4", "16_1"][:numofheads]
+        #    vi_items=["19_9", "17_5", "20_5", "14_7", "19_6", "17_2", "14_9", "19_10", "20_0", "17_4"][:numofheads]
+        #    ir_items=["20_5", "19_9", "17_5", "14_9", "14_7", "20_10", "19_6", "17_2", "17_4", "16_1"][:numofheads]
+            if scene == "DAY":
+                vi_items=["14_7", "17_2", "19_9", "17_5", "20_5", "19_6"][:numofheads]
+                ir_items=["20_5", "14_7", "14_9", "19_9", "17_5", "20_10"][:numofheads]
+            elif scene == "NIGHT":
+                vi_items=["14_7", "20_5", "19_9", "20_1", "19_6", "17_4"][:numofheads]
+                ir_items=["20_5", "19_9", "20_10", "14_7", "14_9", "17_2"][:numofheads]
+            else:
+                print("ERROR in scene. Please check the scene.")
+                exit()
         elif model_name == "Qwen2-VL-7B":
             # items=["19_20","19_17","19_22","16_20","19-23","19-15"]
-            vi_items=["19_20","19_25","19_16","19_23","16_1","20_21","19_22","19_15","21_5","19_17"][:numofheads]
-            ir_items=["19_20","14_0","19_17","19_22","14_8","14_7","19_16","19_24","16_1","16_13"][:numofheads]
+            # vi_items=["19_20","19_25","19_16","19_23","16_1","20_21","19_22","19_15","21_5","19_17"][:numofheads]
+            # ir_items=["19_20","14_0","19_17","19_22","14_8","14_7","19_16","19_24","16_1","16_13"][:numofheads]
+            if scene == "DAY":
+                vi_items=["19_20", "19_25", "19_23", "19_16", "20_21", "16_1"][:numofheads]
+                ir_items=["19_17", "19_20", "19_22", "19_16", "19_15", "20_19"][:numofheads]
+            elif scene == "NIGHT":
+                vi_items=["19_20", "19_16", "19_25", "16_1", "20_21", "19_15"][:numofheads]
+                ir_items=["19_20", "14_0", "16_9", "19_24", "19_17", "14_8"][:numofheads]
+            else:
+                print("ERROR in scene. Please check the scene.")
+                exit()
         elif model_name == "Qwen2-VL-7B-Instruct":
             # items=["16_20","20_21","19_15","16_16","18-16","19-25"]
-            vi_items=["19_16","19_21","19_25","18_10","18_19","19_26","20_21","19_23","11_24","19_15"][:numofheads]
-            ir_items=["16_1","16_20","16_0","19_16","14_0","17_27","16_17","14_4","18_10","19_15"][:numofheads]
+            # vi_items=["19_16","19_21","19_25","18_10","18_19","19_26","20_21","19_23","11_24","19_15"][:numofheads]
+            # ir_items=["16_1","16_20","16_0","19_16","14_0","17_27","16_17","14_4","18_10","19_15"][:numofheads]
+            if scene == "DAY":
+                vi_items=["19_16", "19_21", "19_26", "19_15", "18_10", "19_25"][:numofheads]
+                ir_items=["16_1", "19_16", "16_20", "14_0", "14_4", "17_27"][:numofheads]
+            elif scene == "NIGHT":
+                vi_items=["19_16", "19_21", "11_24", "19_25", "18_10", "20_21"][:numofheads]
+                ir_items=["16_1", "16_20", "17_27", "16_0", "14_0", "19_16"][:numofheads]
+            else:
+                print("ERROR in scene. Please check the scene.")
+                exit()
 
         
         if image_type=="vi":
@@ -236,11 +310,30 @@ def generate_specific_attention_map(model, processor, image, object, label, atte
             
         if model_name == "deepseek-vl2-tiny":
             # items=["8_6","7_5","10_1","7_10","9_8","10_7"]
-            vi_items=["9_6","1_1","4_2","8_4","2_6","11_6","10_6","9_2","7_8","10_2"][:numofheads]
-            ir_items=["9_6","4_2","2_6","8_4","10_6","11_6","11_3","7_7","4_7","7_8"][:numofheads]
+            # vi_items=["9_6","1_1","4_2","8_4","2_6","11_6","10_6","9_2","7_8","10_2"][:numofheads]
+            # ir_items=["9_6","4_2","2_6","8_4","10_6","11_6","11_3","7_7","4_7","7_8"][:numofheads]
+            if scene == "DAY":
+                vi_items=["9_6", "1_1", "4_2", "2_6", "10_6", "8_4"][:numofheads]
+                ir_items=["9_6", "4_2", "1_1", "10_6", "2_6", "8_4"][:numofheads]
+            elif scene == "NIGHT":
+                vi_items=["9_6", "8_4", "10_9", "1_1", "10_2", "7_8"][:numofheads]
+                ir_items=["9_6", "4_2", "7_7", "11_3", "8_4", "0_2"][:numofheads]
+            else:
+                print("ERROR in scene. Please check the scene.")
+                exit()
+
         elif model_name == "deepseek-vl2-small":
-            vi_items=["6-5","4-5","18-13","9-3","25-14","4-14","2-10","6-2","3-1","18-4"][:numofheads]
-            ir_items=["6-5","9-3","18-4","4-5","20-1","18-13","6-2","1-15","10-12","19-12"][:numofheads]
+            # vi_items=["6-5","4-5","18-13","9-3","25-14","4-14","2-10","6-2","3-1","18-4"][:numofheads]
+            # ir_items=["6-5","9-3","18-4","4-5","20-1","18-13","6-2","1-15","10-12","19-12"][:numofheads]
+            if scene == "DAY":
+                vi_items=["6_5", "4_5", "9_3", "6_2", "18_4", "6_12"][:numofheads]
+                ir_items=["6_5", "4_5", "9_3", "6_2", "18_4", "18_4"][:numofheads]
+            elif scene == "NIGHT":
+                vi_items=["4_5", "6_5", "18_13", "4_6", "17_7", "6_2"][:numofheads]
+                ir_items=["4_5", "6_5", "25_0", "19_12", "18_13", "6_2"][:numofheads]
+            else:
+                print("ERROR in scene. Please check the scene.")
+                exit()
 
         if image_type=="vi":
             items=vi_items
@@ -259,7 +352,7 @@ def generate_specific_attention_map(model, processor, image, object, label, atte
 
     return att_results
 
-def get_fusion_attention_map(model, processor, ir_img, vi_img, label_mask, object, attention_type, model_type):
+def get_fusion_attention_map(model, processor, ir_img, vi_img, label_mask, object, attention_type, model_type, scene):
 
     model_att_results={}
     model_eval_results={}
@@ -267,14 +360,16 @@ def get_fusion_attention_map(model, processor, ir_img, vi_img, label_mask, objec
     # model_att_results["ir"], model_eval_results["ir"] = generate_all_head_attention_map(model, processor, ir_img, object, label, attention_type, model_type)
     # model_att_results["vi"], model_eval_results["vi"] = generate_all_head_attention_map(model, processor, vi_img, object, label, attention_type, model_type)
     
-    model_att_results["vi"] = generate_specific_attention_map(model, processor, ir_img, object, label_mask, attention_type, model_type,image_type="vi")
-    model_att_results["ir"] = generate_specific_attention_map(model, processor, vi_img, object, label_mask, attention_type, model_type, image_type="ir")
+    model_att_results["vi"] = generate_specific_attention_map(model, processor, ir_img, object, label_mask, attention_type, model_type,image_type="vi", scene=scene)
+    model_att_results["ir"] = generate_specific_attention_map(model, processor, vi_img, object, label_mask, attention_type, model_type, image_type="ir", scene=scene)
     
     fusion_attention_map = composite_attn_map(model_att_results)
     # 二值化
     if args.threshold==0:
         # 自动二值化
         threshold_attention_map = auto_otsu(fusion_attention_map)
+        # threshold_attention_map = adaptive_threshold(fusion_attention_map)
+        # threshold_attention_map = local_otsu(fusion_attention_map)
     else:
         # 手动二值化
         threshold_attention_map = constant_threshold(fusion_attention_map,threshold=args.threshold)
@@ -288,7 +383,7 @@ def get_fusion_attention_map(model, processor, ir_img, vi_img, label_mask, objec
     return threshold_attention_map, model_eval_results
 
 
-def get_enhance_attention_map(model, processor, ir_img, vi_img, label_mask, object, attention_type, model_type):
+def get_enhance_attention_map(model, processor, ir_img, vi_img, label_mask, object, attention_type, model_type, scene):
     model_att_results={}
     model_eval_results={}
     # 获取原始推理方法获得的注意力（0和1）
@@ -297,8 +392,8 @@ def get_enhance_attention_map(model, processor, ir_img, vi_img, label_mask, obje
     # model_att_results["ir"], model_eval_results["ir"] = generate_all_head_attention_map(model, processor, ir_img, object, label, attention_type, model_type)
     # model_att_results["vi"], model_eval_results["vi"] = generate_all_head_attention_map(model, processor, vi_img, object, label, attention_type, model_type)
     
-    model_att_results["vi"] = generate_specific_attention_map(model, processor, ir_img, object, label_mask, attention_type, model_type,image_type="vi")
-    model_att_results["ir"] = generate_specific_attention_map(model, processor, vi_img, object, label_mask, attention_type, model_type, image_type="ir")
+    model_att_results["vi"] = generate_specific_attention_map(model, processor, ir_img, object, label_mask, attention_type, model_type,image_type="vi", scene=scene)
+    model_att_results["ir"] = generate_specific_attention_map(model, processor, vi_img, object, label_mask, attention_type, model_type, image_type="ir", scene=scene)
     
     fusion_attention_map = composite_attn_map(model_att_results)
 
@@ -531,7 +626,7 @@ def generate_lvlm_map(model, processor, ir_image, vi_image, label, object, model
     # print(model_eval_results)
     return att_map,model_eval_results
 
-def visualize_atten_map(image_path,atten_map,ref_map, file_name,object):
+def visualize_atten_map(image_path, atten_map, ref_map, file_name, object, image_type):
     atten_map = atten_map.astype(np.uint8)
     ref_map = ref_map.astype(np.uint8)
     original_img = cv2.imread(image_path)
@@ -553,9 +648,33 @@ def visualize_atten_map(image_path,atten_map,ref_map, file_name,object):
     blended2 = blend_with_original(original_img, overlay2)
 
     combined = np.hstack([blended1, blended2])
+    cv2.imwrite(f'./picture/{object}_{image_type}_{file_name}', cv2.cvtColor(combined, cv2.COLOR_RGBA2BGRA))
+
+
+def visualize_GT_map(vi_image_path, ir_image_path, ref_map, file_name, object):
+    ref_map = ref_map.astype(np.uint8)
+    vi_img = cv2.imread(vi_image_path)
+    ir_img = cv2.imread(ir_image_path)
+    vi_img = cv2.cvtColor(vi_img, cv2.COLOR_BGR2RGB)  # 转为 RGB
+    ir_img = cv2.cvtColor(ir_img, cv2.COLOR_BGR2RGB)  # 转为 RGB
+    def create_overlay(array, color=(255, 0, 0), alpha=0.5):
+        overlay = np.zeros((*array.shape, 4), dtype=np.uint8)
+        overlay[array == 1] = [*color, int(255 * alpha)]
+        return overlay
+    def blend_with_original(original, overlay):
+        original_rgba = cv2.cvtColor(original, cv2.COLOR_RGB2RGBA)
+        overlay_alpha = overlay[:, :, 3] / 255.0
+        blended = original_rgba.copy()
+        for c in range(3):
+            blended[:, :, c] = (1 - overlay_alpha) * original_rgba[:, :, c] + overlay_alpha * overlay[:, :, c]
+        return blended
+    overlay1 = create_overlay(ref_map, color=(0, 255, 0), alpha=0.5)  # 绿色
+    overlay2 = create_overlay(ref_map, color=(0, 255, 0), alpha=0.5)  # 绿色
+    blended1 = blend_with_original(vi_img, overlay1)
+    blended2 = blend_with_original(ir_img, overlay2)
+
+    combined = np.hstack([blended1, blended2])
     cv2.imwrite(f'./picture/{object}_{file_name}', cv2.cvtColor(combined, cv2.COLOR_RGBA2BGRA))
-
-
 
 import json
 
@@ -584,7 +703,7 @@ def append_to_json_lines(new_dict, filename):
 
 
 class SegmentationLabelProcessor:
-    def __init__(self,dataset_path):
+    def __init__(self,dataset_path, scene):
         if "MSRS" in dataset_path:
             self.dataset_type= "MSRS" # FMMB
         elif "MFNet" in dataset_path:
@@ -599,6 +718,18 @@ class SegmentationLabelProcessor:
         self.vi_path = os.path.join(dataset_path,"vi")
         self.label_path = os.path.join(dataset_path,"Segmentation_labels")
         self.file_list = os.listdir(self.label_path)
+        # 根据scene参数过滤文件列表
+        if scene == "DAY":
+            # 只保留文件名末尾为D结尾的文件，例如：00020D.png
+            self.file_list = [f for f in self.file_list if f.endswith('D.png') or f.endswith('D.jpg') or f.endswith('D.jpeg')]
+        elif scene == "NIGHT":
+            # 只保留文件名末尾为N结尾的文件
+            self.file_list = [f for f in self.file_list if f.endswith('N.png') or f.endswith('N.jpg') or f.endswith('N.jpeg')]
+        elif scene == "ALL":
+            # 保持现在的逻辑，不进行过滤
+            pass
+        else:
+            print(f"Warning: Unknown scene parameter '{scene}', using all files.")
 
     def __getitem__(self,item):
         file_name = self.file_list[item]
@@ -670,6 +801,7 @@ if __name__ == "__main__":
     parser.add_argument('--num', help='Num of Heads')
     parser.add_argument('--dataset', help='Dataset name')
     parser.add_argument('--objects', help='Split method')
+    parser.add_argument('--scene', help='Scene type')
     parser.add_argument('--eval_type', help='Evaluation type')
     parser.add_argument('--attention_type', help='Attention type')
     parser.add_argument('--model_path', help='Path to the model')
@@ -683,6 +815,7 @@ if __name__ == "__main__":
     print("num of heads:", args.num)
     print("dataset:", args.dataset)
     print("objects:", args.objects)
+    print("scene:", args.scene)
     print("attention_type:", args.attention_type)
     print("eval_type:", args.eval_type)
     print("model_path:", args.model_path)
@@ -733,7 +866,7 @@ if __name__ == "__main__":
 
     # 加载数据集
     dataset_path = os.path.join(args.data_root,args.dataset)    
-    dataset_processor = SegmentationLabelProcessor(dataset_path)
+    dataset_processor = SegmentationLabelProcessor(dataset_path, args.scene)
     res_img={}
     result=[]
     json_file = f'./results/{model_type}_{args.dataset}_{args.eval_type}_{args.attention_type}.json'
@@ -745,6 +878,19 @@ if __name__ == "__main__":
     NUM = len(dataset_processor) if len(dataset_processor) < LIMIT else LIMIT
     for item in tqdm(range(NUM), desc="Processing images"): #2D array类型数据
         label, ir_img, vi_img, file_name = dataset_processor[item]
+        if args.scene == "DAY":
+            SCENE = "DAY"
+        elif args.scene == "NIGHT":
+            SCENE = "NIGHT"
+        elif args.scene == "ALL":
+            if "D" in file_name:
+                SCENE = "DAY"
+            elif "N" in file_name:
+                SCENE = "NIGHT"
+            else:
+                print("ERROR in scene. Please check the scene.")
+                exit()
+
         for i in range(len(objects)+1):# 从1开始
             if dataset_processor.check_class_exists(label, i):
                 label_mask = dataset_processor.extract_mask(label, i) # 获得对应目标的准确mask
@@ -754,10 +900,10 @@ if __name__ == "__main__":
                     atten_map,eval_results = generate_lvlm_map(model, processor, ir_img, vi_img, label_mask, object, model_type)
 
                 elif args.eval_type == "Fusion": #进行融合的计算方式
-                    atten_map,eval_results = get_fusion_attention_map(model, processor, ir_img, vi_img, label_mask, object, args.attention_type, model_type)
+                    atten_map,eval_results = get_fusion_attention_map(model, processor, ir_img, vi_img, label_mask, object, args.attention_type, model_type, SCENE)
                     # print(eval_results)
                 elif args.eval_type == "Enhance": #进行增强的计算方式
-                    atten_map,eval_results = get_enhance_attention_map(model, processor, ir_img, vi_img, label_mask, object, args.attention_type, model_type)
+                    atten_map,eval_results = get_enhance_attention_map(model, processor, ir_img, vi_img, label_mask, object, args.attention_type, model_type, SCENE)
 
                 else:
                     print("ERROR in attention_type. Please check the attention_type.")
@@ -776,8 +922,12 @@ if __name__ == "__main__":
 
                 # 可视化检测结果代码
                 #--------------------------------
-                # visualize_atten_map(dataset_processor.vi_path+f'/{file_name}', atten_map, label_mask, file_name, object)
-                # visualize_atten_map(dataset_processor.ir_path+f'/{file_name}', atten_map, label_mask, file_name, object)
+                # 展示融合后与GT的对比结果
+                visualize_atten_map(dataset_processor.vi_path+f'/{file_name}', atten_map, label_mask, file_name, object, "VI")
+                visualize_atten_map(dataset_processor.ir_path+f'/{file_name}', atten_map, label_mask, file_name, object, "IR")
+                
+                # 展示可见光与红外的GT的示意图
+                # visualize_GT_map(dataset_processor.vi_path+f'/{file_name}', dataset_processor.ir_path+f'/{file_name}', label_mask, file_name, object)
                 #--------------------------------
             else:
                 continue
@@ -821,12 +971,6 @@ if __name__ == "__main__":
         print(f"model:{args.model_path},avg_param1:{avg_param1},avg_param2:{avg_param2},avg_param3:{avg_param3},avg_param4:{avg_param4}")
         file.write(str([args.model_path,avg_param1,avg_param2,avg_param3,avg_param4])+ '\n')
   
-    
-            # # 输出可视化分割对比图
-            # output_picture = True   
-            # if output_picture:
-            #     visualize_atten_map(image_path,atten_map,ref_map)
-            
 
         # import datetime
         # timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")          

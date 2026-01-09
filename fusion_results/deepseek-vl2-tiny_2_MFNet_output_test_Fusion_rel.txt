@@ -1,0 +1,2 @@
+all_inference:1315
+['/data/VLM/deepseek-vl2-tiny', 30.64, 14.27, 10.98, 30.13]

@@ -1,0 +1,2 @@
+all_inference:1315
+['/data/VLM/Qwen2.5-VL-3B-Instruct', 30.28, 10.25, 8.13, 30.18]

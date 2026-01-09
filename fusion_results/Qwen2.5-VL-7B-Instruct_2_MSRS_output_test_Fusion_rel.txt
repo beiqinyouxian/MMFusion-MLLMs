@@ -1,0 +1,14 @@
+all_inference:1251
+['/data/VLM/Qwen2.5-VL-7B-Instruct', 35.45, 43.19, 17.97, 31.46]
+all_inference:1251
+['/data/VLM/Qwen2.5-VL-7B-Instruct', 35.45, 43.15, 17.96, 31.44]
+all_inference:1251
+['/data/VLM/Qwen2.5-VL-7B-Instruct', 35.45, 43.55, 18.1, 31.49]
+all_inference:1251
+['/data/VLM/Qwen2.5-VL-7B-Instruct', 35.41, 45.09, 18.64, 31.48]
+all_inference:1251
+['/data/VLM/Qwen2.5-VL-7B-Instruct', 35.44, 44.2, 18.33, 31.5]
+all_inference:1251
+['/data/VLM/Qwen2.5-VL-7B-Instruct', 28.69, 98.58, 31.19, 31.46]
+all_inference:1251
+['/data/VLM/Qwen2.5-VL-7B-Instruct', 29.22, 53.32, 18.52, 31.46]
