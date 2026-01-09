@@ -1,4 +1,0 @@
-all_inference:1251
-['/data/VLM/llava-1.5-13b-hf', 44.23, 48.77, 27.5, 38.56]
-all_inference:1241
-['/data/VLM/llava-1.5-13b-hf', 39.77, 48.06, 26.44, 36.27]

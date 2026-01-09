@@ -1,4 +1,3 @@
-# 处理代码加载
 from matplotlib.pylab import true_divide
 import torch
 import os
@@ -8,8 +7,6 @@ import skimage.io as io
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import model_methods
-# from pycocotools.coco import COCO
-# from pycocotools import mask
 from transformers import AutoModel, AutoTokenizer
 model_type_to_module = {
     "qwen2.5vl": "model_methods.qwen2_5_methods",
@@ -54,13 +51,12 @@ def load_VLM_model(model_path, model_type):
             torch_dtype=torch.bfloat16,
             low_cpu_mem_usage=True,
             attn_implementation="eager",
-            device_map="auto"  # 自动分配到可用GPU
+            device_map="auto"
         )
         llava_processor = model_methods.llava_methods.LlavaProcessor.from_pretrained(model_path, patch_size=14, use_fast=True)
         return llava_model, llava_processor
     elif model_type == "deepseek_vl2":
         vl2_chat_processor: DeepseekVLV2Processor = model_methods.deepseekvl2_methods.DeepseekVLV2Processor.from_pretrained(model_path)
-        # tokenizer = vl_chat_processor.tokenizer
         device_map = model_methods.deepseekvl2_methods.split_model(model_path)
         vl2_gpt: DeepseekVLV2ForCausalLM = model_methods.deepseekvl2_methods.AutoModelForCausalLM.from_pretrained(
             model_path, 
@@ -68,8 +64,6 @@ def load_VLM_model(model_path, model_type):
             torch_dtype=torch.bfloat16,
             device_map=device_map
         ).eval()
-        # vl2_gpt: DeepseekVLV2ForCausalLM = deepseekvl2_methods.AutoModelForCausalLM.from_pretrained(model_path, trust_remote_code=True)
-        # vl2_gpt = vl2_gpt.to(torch.bfloat16).cuda().eval()
         return vl2_gpt, vl2_chat_processor
 
     elif model_type == "deepseek_vl":
@@ -94,7 +88,6 @@ def load_VLM_model(model_path, model_type):
         exit()
 
 
-# 注意力图生成
 
 from utils import *
 from PIL import Image, ImageDraw
@@ -108,24 +101,16 @@ def generate_specific_attention_map(model, processor, image, object, label, atte
     items=[]
     numofheads=int(args.num)
     model_name = (args.model_path).split('/')[-1]
-    # 输入到其中特定的层和注意力头，返回它们融合之后的注意力图，先对它们归一化然后再相加。
     if model_type == "llava":
         if "7" in args.model_path:
-            # 7B
             LAYERS=32
             HEADS=32
           
         elif "13" in args.model_path:
-            # 13B
             LAYERS=40
             HEADS=40
       
         if model_name == "llava-v1.5-7b-hf":
-            # items=["14_24","14_20","14_3"]
-            # items=["14_24","14_13","14_26","18_10","17_11"][:numofheads] #CVPR top
-            # acc TOP
-            # vi_items=["11_17","14_3","14_26","18_10","14_20","10_29","17_18","14_24","17_11","17_13"][:numofheads]
-            # ir_items=["14_26","11_17","14_3","10_29","14_24","17_18","17_11","14_20","18_10","11_14"][:numofheads]
             if scene == "DAY":
                 vi_items=["11_17", "14_26", "14_3", "17_18", "14_24", "17_11"][:numofheads]
                 ir_items=["14_26", "10_29", "11_17", "14_3", "17_18", "18_10"][:numofheads]
@@ -137,12 +122,7 @@ def generate_specific_attention_map(model, processor, image, object, label, atte
                 exit()
 
         elif model_name == "llava-1.5-13b-hf":
-            # items=["13_17","13_21","15_2"]
-            # vi_items=["13_17","13_21","16_2","17_19","15_2","16_20","15_26","14_20","14_21","17_2"][:numofheads]
-            # ir_items=["15_2","13_17","13_21","16_20","14_21","16_2","15_26","14_20","16_25","12_20"][:numofheads]
 
-            # vi_items=["13_17", "16_30", "13_21", "11_37", "16_31", "16_2", "15_39", "17_19", "15_2", "16_20"][:numofheads]
-            # ir_items=["16_30", "15_2", "15_39", "13_17", "13_21", "11_37", "16_20", "16_31", "14_21", "16_2"][:numofheads]
             
             if scene == "DAY":
                 vi_items=["13_17", "16_30", "11_37", "13_21", "15_39", "16_31"][:numofheads]
@@ -166,30 +146,21 @@ def generate_specific_attention_map(model, processor, image, object, label, atte
             print("image size is greater than 1024, use high_res")
             exit()
         else:
-            # print("image size is less than 1024, use norm_res")
             if attention_type == "orin":
                 att_results = specific_norm_res(model_methods.llava_methods.auto_param_orin_attention_llava, image, prompt, general_prompt, model, processor, label, LAYERS, HEADS, items)
             elif attention_type == "rel":
                 att_results = specific_norm_res(model_methods.llava_methods.auto_param_rel_attention_llava, image, prompt, general_prompt, model, processor, label, LAYERS, HEADS, items)
 
-        # 返回的att_results是一个字典，字典中键和值包含layer/head对应的注意力图
-    # Qwen待修改
     elif model_type == "qwen2.5vl":
         if "3" in args.model_path:
-            # 3B
             LAYERS=36
             HEADS=16
             
         elif "7" in args.model_path:
-            # 7B
             LAYERS=28
             HEADS=28
             
         if model_name == "Qwen2.5-VL-3B-Instruct":
-            # items=["24_4","27_7","23_1","25_14","21_13"，"25_8"]
-            # acc TOP
-            # vi_items=["27_7","25_8","27_2","20_7","27_0","25_14","20_7","23_0","20_1","29_3"][:numofheads]
-            # ir_items=["27_7","27_2","27_0","20_7","20_4","22_15","20_1","23_0","22_13","25_8"][:numofheads]
 
             if scene == "DAY":
                 vi_items=["27_7", "25_8", "27_2", "20_4", "25_14", "26_12"][:numofheads]
@@ -202,10 +173,6 @@ def generate_specific_attention_map(model, processor, image, object, label, atte
                 exit()
       
         elif model_name == "Qwen2.5-VL-7B-Instruct":
-            # items=["19_20","19_23","21_25","19_16","18_16","19_22"]
-            # acc TOP
-            # vi_items=["19_20","19_16","19_22","19_23","19_21","19_17","19_25","19_19","20_16","19_15"][:numofheads]
-            # ir_items=["19_21","19_23","19_20","19_16","18_16","21_26","19_25","17_27","19_22","19_17"][:numofheads]
             if scene == "DAY":
                 vi_items=["19_20", "19_22", "19_23", "19_21", "19_16", "19_25"][:numofheads]
                 ir_items=["19_20", "19_21", "17_27", "19_25", "21_26", "19_16"][:numofheads]
@@ -236,8 +203,6 @@ def generate_specific_attention_map(model, processor, image, object, label, atte
             HEADS=12
 
         if model_name == "Qwen2-VL-2B":
-            # vi_items=["17_1", "19_8", "17_5", "19_6", "20_5", "19_9", "20_1", "17_2", "20_0", "17_4"][:numofheads]
-            # ir_items=["19_6", "20_0", "14_9", "19_8", "17_2", "12_7", "14_10", "17_5", "17_1", "22_5"][:numofheads]
             if scene == "DAY":
                 vi_items=["17_1", "17_4", "19_9", "17_5", "21_11", "20_1"][:numofheads]
                 ir_items=["14_9", "20_0", "17_2", "19_6", "14_10", "19_8"][:numofheads]
@@ -249,8 +214,6 @@ def generate_specific_attention_map(model, processor, image, object, label, atte
                 exit()
 
         elif model_name == "Qwen2-VL-2B-Instruct":
-        #    vi_items=["19_9", "17_5", "20_5", "14_7", "19_6", "17_2", "14_9", "19_10", "20_0", "17_4"][:numofheads]
-        #    ir_items=["20_5", "19_9", "17_5", "14_9", "14_7", "20_10", "19_6", "17_2", "17_4", "16_1"][:numofheads]
             if scene == "DAY":
                 vi_items=["14_7", "17_2", "19_9", "17_5", "20_5", "19_6"][:numofheads]
                 ir_items=["20_5", "14_7", "14_9", "19_9", "17_5", "20_10"][:numofheads]
@@ -261,9 +224,6 @@ def generate_specific_attention_map(model, processor, image, object, label, atte
                 print("ERROR in scene. Please check the scene.")
                 exit()
         elif model_name == "Qwen2-VL-7B":
-            # items=["19_20","19_17","19_22","16_20","19-23","19-15"]
-            # vi_items=["19_20","19_25","19_16","19_23","16_1","20_21","19_22","19_15","21_5","19_17"][:numofheads]
-            # ir_items=["19_20","14_0","19_17","19_22","14_8","14_7","19_16","19_24","16_1","16_13"][:numofheads]
             if scene == "DAY":
                 vi_items=["19_20", "19_25", "19_23", "19_16", "20_21", "16_1"][:numofheads]
                 ir_items=["19_17", "19_20", "19_22", "19_16", "19_15", "20_19"][:numofheads]
@@ -274,9 +234,6 @@ def generate_specific_attention_map(model, processor, image, object, label, atte
                 print("ERROR in scene. Please check the scene.")
                 exit()
         elif model_name == "Qwen2-VL-7B-Instruct":
-            # items=["16_20","20_21","19_15","16_16","18-16","19-25"]
-            # vi_items=["19_16","19_21","19_25","18_10","18_19","19_26","20_21","19_23","11_24","19_15"][:numofheads]
-            # ir_items=["16_1","16_20","16_0","19_16","14_0","17_27","16_17","14_4","18_10","19_15"][:numofheads]
             if scene == "DAY":
                 vi_items=["19_16", "19_21", "19_26", "19_15", "18_10", "19_25"][:numofheads]
                 ir_items=["16_1", "19_16", "16_20", "14_0", "14_4", "17_27"][:numofheads]
@@ -309,9 +266,6 @@ def generate_specific_attention_map(model, processor, image, object, label, atte
             HEADS=16
             
         if model_name == "deepseek-vl2-tiny":
-            # items=["8_6","7_5","10_1","7_10","9_8","10_7"]
-            # vi_items=["9_6","1_1","4_2","8_4","2_6","11_6","10_6","9_2","7_8","10_2"][:numofheads]
-            # ir_items=["9_6","4_2","2_6","8_4","10_6","11_6","11_3","7_7","4_7","7_8"][:numofheads]
             if scene == "DAY":
                 vi_items=["9_6", "1_1", "4_2", "2_6", "10_6", "8_4"][:numofheads]
                 ir_items=["9_6", "4_2", "1_1", "10_6", "2_6", "8_4"][:numofheads]
@@ -323,8 +277,6 @@ def generate_specific_attention_map(model, processor, image, object, label, atte
                 exit()
 
         elif model_name == "deepseek-vl2-small":
-            # vi_items=["6-5","4-5","18-13","9-3","25-14","4-14","2-10","6-2","3-1","18-4"][:numofheads]
-            # ir_items=["6-5","9-3","18-4","4-5","20-1","18-13","6-2","1-15","10-12","19-12"][:numofheads]
             if scene == "DAY":
                 vi_items=["6_5", "4_5", "9_3", "6_2", "18_4", "6_12"][:numofheads]
                 ir_items=["6_5", "4_5", "9_3", "6_2", "18_4", "18_4"][:numofheads]
@@ -357,82 +309,48 @@ def get_fusion_attention_map(model, processor, ir_img, vi_img, label_mask, objec
     model_att_results={}
     model_eval_results={}
     
-    # model_att_results["ir"], model_eval_results["ir"] = generate_all_head_attention_map(model, processor, ir_img, object, label, attention_type, model_type)
-    # model_att_results["vi"], model_eval_results["vi"] = generate_all_head_attention_map(model, processor, vi_img, object, label, attention_type, model_type)
     
     model_att_results["vi"] = generate_specific_attention_map(model, processor, ir_img, object, label_mask, attention_type, model_type,image_type="vi", scene=scene)
     model_att_results["ir"] = generate_specific_attention_map(model, processor, vi_img, object, label_mask, attention_type, model_type, image_type="ir", scene=scene)
     
     fusion_attention_map = composite_attn_map(model_att_results)
-    # 二值化
     if args.threshold==0:
-        # 自动二值化
         threshold_attention_map = auto_otsu(fusion_attention_map)
-        # threshold_attention_map = adaptive_threshold(fusion_attention_map)
-        # threshold_attention_map = local_otsu(fusion_attention_map)
     else:
-        # 手动二值化
         threshold_attention_map = constant_threshold(fusion_attention_map,threshold=args.threshold)
-    # model_eval_results["fusion"] = fusion_attention_map
-    # 对融合指标进行测试，计算recall,precision,f1
     eval_processor = Evaluation_processor(label_mask, threshold_attention_map)
-    # 计算评估指标
     model_eval_results = eval_processor.calculate_metrics()
     model_eval_results.append(eval_processor.calculate_Entropy(fusion_attention_map))
-    # fusion_attention_map=None # avoid out of memory
     return threshold_attention_map, model_eval_results
 
 
 def get_enhance_attention_map(model, processor, ir_img, vi_img, label_mask, object, attention_type, model_type, scene):
     model_att_results={}
     model_eval_results={}
-    # 获取原始推理方法获得的注意力（0和1）
     model_att_results["orin"] , _ = generate_lvlm_map(model, processor, ir_img, vi_img, label_mask, object, model_type)
    
-    # model_att_results["ir"], model_eval_results["ir"] = generate_all_head_attention_map(model, processor, ir_img, object, label, attention_type, model_type)
-    # model_att_results["vi"], model_eval_results["vi"] = generate_all_head_attention_map(model, processor, vi_img, object, label, attention_type, model_type)
     
     model_att_results["vi"] = generate_specific_attention_map(model, processor, ir_img, object, label_mask, attention_type, model_type,image_type="vi", scene=scene)
     model_att_results["ir"] = generate_specific_attention_map(model, processor, vi_img, object, label_mask, attention_type, model_type, image_type="ir", scene=scene)
     
     fusion_attention_map = composite_attn_map(model_att_results)
 
-    # 二值化
     if args.threshold==0:
-        # 自动二值化
         threshold_attention_map = auto_otsu(fusion_attention_map)
     else:
-        # 手动二值化
         threshold_attention_map = constant_threshold(fusion_attention_map,threshold=args.threshold)
-    # model_eval_results["fusion"] = fusion_attention_map
-    # 对融合指标进行测试，计算recall,precision,f1
     eval_processor = Evaluation_processor(label_mask, threshold_attention_map)
-    # 计算评估指标
     model_eval_results = eval_processor.calculate_metrics()
     model_eval_results.append(eval_processor.calculate_Entropy(fusion_attention_map))
-    fusion_attention_map=None # AVOID OUT OF MEMORY
+    fusion_attention_map=None
     return fusion_attention_map, model_eval_results
 
 def create_mask_from_bbox(image_size, bbox_list, model_type):
-    """
-    根据图片大小和bbox列表创建二进制掩码数组
-    
-    参数:
-        image_size (tuple): 图片尺寸，格式为(高度, 宽度)
-        bbox_list (list): bbox列表，每个bbox格式为[xmin, ymin, xmax, ymax]
-    
-    返回:
-        numpy.ndarray: 生成的二进制掩码数组，形状为(image_height, image_width)
-    """
-    # 解包图片尺寸
     image_height, image_width = image_size
     
-    # 创建全0的掩码数组
     mask = np.zeros((image_height, image_width), dtype=np.uint8)
     try:
-        # 遍历每个bbox
         for bbox in bbox_list:
-            # print(bbox)
          
             xmin, ymin, xmax, ymax = bbox
             if xmin <= 1 and ymin <= 1 and xmax <= 1 and ymax <= 1:
@@ -441,17 +359,13 @@ def create_mask_from_bbox(image_size, bbox_list, model_type):
                 xmax = xmax*image_width
                 ymax = ymax*image_height
            
-            # 处理坐标超出边界的情况
             xmin = max(0, int(xmin))
             ymin = max(0, int(ymin))
             xmax = min(image_width, int(xmax))
             ymax = min(image_height, int(ymax))
             
-            # 确保xmax > xmin且ymax > ymin
             if xmax <= xmin or ymax <= ymin:
                 continue
-            # print(xmin,ymin,xmax,ymax)
-            # 将bbox区域设为1
             mask[ymin:ymax, xmin:xmax] = 1
     except Exception as e:
         mask[0:1, 0:1] = 0
@@ -459,7 +373,6 @@ def create_mask_from_bbox(image_size, bbox_list, model_type):
     return mask
 
 import re
-# 正常方法的visual grounding
 def generate_lvlm_map(model, processor, ir_image, vi_image, label, object, model_type):
     width, height = ir_image.size
     if model_type == "llava":
@@ -489,7 +402,6 @@ def generate_lvlm_map(model, processor, ir_image, vi_image, label, object, model
         generated_ids_trimmed = [out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)]
         result = processor.batch_decode(generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False)
         result = str(result)
-        # print(result)
           
     if model_type == "qwen2.5vl":
         vi_image_str = encode_base64(vi_image)
@@ -519,7 +431,6 @@ def generate_lvlm_map(model, processor, ir_image, vi_image, label, object, model
             {"role": "<|Assistant|>", "content": ""}
         ]
 
-        # load images and prepare for inputs
         pil_images=[vi_image,ir_image]
         prepare_inputs = processor(
             conversations=conversation,
@@ -528,10 +439,8 @@ def generate_lvlm_map(model, processor, ir_image, vi_image, label, object, model
             system_prompt=""
         ).to(model.device)
 
-        # run image encoder to get the image embeddings
         inputs_embeds = model.prepare_inputs_embeds(**prepare_inputs)
 
-        # run the model to get the response
         outputs = model.language.generate(
             inputs_embeds=inputs_embeds,
             attention_mask=prepare_inputs.attention_mask,
@@ -544,7 +453,6 @@ def generate_lvlm_map(model, processor, ir_image, vi_image, label, object, model
         )
 
         result = processor.tokenizer.decode(outputs[0].cpu().tolist(), skip_special_tokens=False)
-        # print(f"{prepare_inputs['sft_format'][0]}", result)
 
     if model_type == "deepseek_vl":
         data_url1 = model_methods.deepseekvl_methods.pil_image_to_data_url(vi_image)
@@ -567,10 +475,8 @@ def generate_lvlm_map(model, processor, ir_image, vi_image, label, object, model
             force_batchify=True
         ).to(model.device)
 
-        # run image encoder to get the image embeddings
         inputs_embeds = model.prepare_inputs_embeds(**prepare_inputs)
 
-        # run the model to get the response
         outputs = model.language_model.generate(
             inputs_embeds=inputs_embeds,
             attention_mask=prepare_inputs.attention_mask,
@@ -583,13 +489,10 @@ def generate_lvlm_map(model, processor, ir_image, vi_image, label, object, model
         )
 
         result = processor.tokenizer.decode(outputs[0].cpu().tolist(), skip_special_tokens=True)
-        # print(f"{prepare_inputs['sft_format'][0]}", result)
     if model_type == "internvl2_5":
-        # set the max number of tiles in `max_num`
         pixel_values = model_methods.internvl2_5_methods.load_image(vi_image, max_num=12).to(torch.bfloat16).cuda()
         generation_config = dict(max_new_tokens=256, do_sample=True)
 
-        # multi-image multi-round conversation, separate images (多图多轮对话，独立图像)
         pixel_values1 = model_methods.internvl2_5_methods.load_image(vi_image, max_num=12).to(torch.bfloat16).cuda()
         pixel_values2 = model_methods.internvl2_5_methods.load_image(ir_image, max_num=12).to(torch.bfloat16).cuda()
         pixel_values = torch.cat((pixel_values1, pixel_values2), dim=0)
@@ -600,21 +503,16 @@ def generate_lvlm_map(model, processor, ir_image, vi_image, label, object, model
                                     num_patches_list=num_patches_list,
                                     history=None, return_history=True)
         result = str(response)
-        # print(result)
 
-    # 根据生成的result提取对应的bboxs:
     try:
         bboxes = re.findall(r'\[([\d.\s,]+)\]', result)
         result = [list(map(float, bbox.replace(' ', '').split(','))) for bbox in bboxes]
     except:
         print("ERROR in generate_lvlm_map. Please check the result.")
         result = [0,0,0,0]
-    # print(result)
 
     att_map = create_mask_from_bbox((height, width), result, model_type) 
-    # 将bboxs生成的attention map进行指标测评
     eval_processor = Evaluation_processor(label, att_map)
-    # 计算评估指标
     model_eval_results = eval_processor.calculate_metrics()
     entropy=eval_processor.calculate_Entropy(att_map)
     if type(entropy) == np.float64 or type(entropy) == int:
@@ -623,14 +521,13 @@ def generate_lvlm_map(model, processor, ir_image, vi_image, label, object, model
         print("ERROR in calculate_Entropy. Please check the entropy.")
         print(type(entropy))
         model_eval_results.append(0)
-    # print(model_eval_results)
     return att_map,model_eval_results
 
 def visualize_atten_map(image_path, atten_map, ref_map, file_name, object, image_type):
     atten_map = atten_map.astype(np.uint8)
     ref_map = ref_map.astype(np.uint8)
     original_img = cv2.imread(image_path)
-    original_img = cv2.cvtColor(original_img, cv2.COLOR_BGR2RGB)  # 转为 RGB
+    original_img = cv2.cvtColor(original_img, cv2.COLOR_BGR2RGB)
     def create_overlay(array, color=(255, 0, 0), alpha=0.5):
         overlay = np.zeros((*array.shape, 4), dtype=np.uint8)
         overlay[array == 1] = [*color, int(255 * alpha)]
@@ -642,8 +539,8 @@ def visualize_atten_map(image_path, atten_map, ref_map, file_name, object, image
         for c in range(3):
             blended[:, :, c] = (1 - overlay_alpha) * original_rgba[:, :, c] + overlay_alpha * overlay[:, :, c]
         return blended
-    overlay1 = create_overlay(ref_map, color=(255, 0, 0), alpha=0.5)  # 红色
-    overlay2 = create_overlay(atten_map, color=(0, 255, 0), alpha=0.5)  # 绿色
+    overlay1 = create_overlay(ref_map, color=(255, 0, 0), alpha=0.5)
+    overlay2 = create_overlay(atten_map, color=(0, 255, 0), alpha=0.5)
     blended1 = blend_with_original(original_img, overlay1)
     blended2 = blend_with_original(original_img, overlay2)
 
@@ -655,8 +552,8 @@ def visualize_GT_map(vi_image_path, ir_image_path, ref_map, file_name, object):
     ref_map = ref_map.astype(np.uint8)
     vi_img = cv2.imread(vi_image_path)
     ir_img = cv2.imread(ir_image_path)
-    vi_img = cv2.cvtColor(vi_img, cv2.COLOR_BGR2RGB)  # 转为 RGB
-    ir_img = cv2.cvtColor(ir_img, cv2.COLOR_BGR2RGB)  # 转为 RGB
+    vi_img = cv2.cvtColor(vi_img, cv2.COLOR_BGR2RGB)
+    ir_img = cv2.cvtColor(ir_img, cv2.COLOR_BGR2RGB)
     def create_overlay(array, color=(255, 0, 0), alpha=0.5):
         overlay = np.zeros((*array.shape, 4), dtype=np.uint8)
         overlay[array == 1] = [*color, int(255 * alpha)]
@@ -668,8 +565,8 @@ def visualize_GT_map(vi_image_path, ir_image_path, ref_map, file_name, object):
         for c in range(3):
             blended[:, :, c] = (1 - overlay_alpha) * original_rgba[:, :, c] + overlay_alpha * overlay[:, :, c]
         return blended
-    overlay1 = create_overlay(ref_map, color=(0, 255, 0), alpha=0.5)  # 绿色
-    overlay2 = create_overlay(ref_map, color=(0, 255, 0), alpha=0.5)  # 绿色
+    overlay1 = create_overlay(ref_map, color=(0, 255, 0), alpha=0.5)
+    overlay2 = create_overlay(ref_map, color=(0, 255, 0), alpha=0.5)
     blended1 = blend_with_original(vi_img, overlay1)
     blended2 = blend_with_original(ir_img, overlay2)
 
@@ -684,20 +581,10 @@ class CustomEncoder(json.JSONEncoder):
             return float(obj)
         elif isinstance(obj, np.integer):
             return int(obj)
-        # 还可以添加其他需要处理的类型
         return super(CustomEncoder, self).default(obj)
 
 def append_to_json_lines(new_dict, filename):
-    """
-    以JSON Lines格式向文件追加数据
-    
-    参数:
-        new_dict (dict): 要添加的字典
-        filename (str): JSON文件名
-    """    
     with open(filename, 'a', encoding='utf-8') as f:
-        # 确保每行是一个完整的JSON对象
-        # f.write(json.dumps(new_dict, ensure_ascii=False) + '\n')
         f.write(json.dumps(new_dict, ensure_ascii=False, cls=CustomEncoder) + '\n')
 
 
@@ -705,7 +592,7 @@ def append_to_json_lines(new_dict, filename):
 class SegmentationLabelProcessor:
     def __init__(self,dataset_path, scene):
         if "MSRS" in dataset_path:
-            self.dataset_type= "MSRS" # FMMB
+            self.dataset_type= "MSRS"
         elif "MFNet" in dataset_path:
             self.dataset_type= "MFNet"
         elif "FMB" in dataset_path:
@@ -718,15 +605,11 @@ class SegmentationLabelProcessor:
         self.vi_path = os.path.join(dataset_path,"vi")
         self.label_path = os.path.join(dataset_path,"Segmentation_labels")
         self.file_list = os.listdir(self.label_path)
-        # 根据scene参数过滤文件列表
         if scene == "DAY":
-            # 只保留文件名末尾为D结尾的文件，例如：00020D.png
             self.file_list = [f for f in self.file_list if f.endswith('D.png') or f.endswith('D.jpg') or f.endswith('D.jpeg')]
         elif scene == "NIGHT":
-            # 只保留文件名末尾为N结尾的文件
             self.file_list = [f for f in self.file_list if f.endswith('N.png') or f.endswith('N.jpg') or f.endswith('N.jpeg')]
         elif scene == "ALL":
-            # 保持现在的逻辑，不进行过滤
             pass
         else:
             print(f"Warning: Unknown scene parameter '{scene}', using all files.")
@@ -739,15 +622,12 @@ class SegmentationLabelProcessor:
         return label, ir_img, vi_img, file_name
 
     def __len__(self):
-        """返回数据集的总项目数"""
         return len(self.file_list)
     def imread(self, path):
-        """读取PNG格式的分割标签图像"""
         label = np.array(Image.open(path))
         return label
     
     def get_palette(self):
-        """定义并返回类别调色板"""
         unlabelled = [0, 0, 0]
         car = [64, 0, 128]
         person = [64, 64, 0]
@@ -764,16 +644,6 @@ class SegmentationLabelProcessor:
         ])
     
     def extract_mask(self, label, class_id):
-        """
-        提取特定类别的掩码
-        
-        参数:
-        label: 标签数组(类别ID)
-        class_id: 想要提取的类别ID
-        
-        返回:
-        mask: 二值掩码，目标类别位置为1，其他为0
-        """
         if self.dataset_type == "MSRS" or self.dataset_type == "MFNet":
             mask = np.zeros_like(label, dtype=np.uint8)
             mask[label == class_id] = 1
@@ -785,18 +655,16 @@ class SegmentationLabelProcessor:
         return mask
     
     def check_class_exists(self, label, class_id):
-        """检查标签中是否存在特定类别ID"""
         unique_classes = np.unique(label)
         return class_id in unique_classes
 
 if __name__ == "__main__":
 
-    random.seed(42)  # 设置随机种子为42
+    random.seed(42)
     
-    import argparse    # 创建命令行参数解析器
+    import argparse
     parser = argparse.ArgumentParser(description='Process command line arguments')
 
-    # 添加参数定义
     parser.add_argument('--threshold', type=float, help='Threshold value')
     parser.add_argument('--num', help='Num of Heads')
     parser.add_argument('--dataset', help='Dataset name')
@@ -807,10 +675,8 @@ if __name__ == "__main__":
     parser.add_argument('--model_path', help='Path to the model')
     parser.add_argument('--data_root', help='Root directory for data')
 
-    # 解析命令行参数
     args = parser.parse_args()
 
-    # 打印参数值
     print("threshold:", args.threshold)
     print("num of heads:", args.num)
     print("dataset:", args.dataset)
@@ -822,7 +688,6 @@ if __name__ == "__main__":
     print("data_root:", args.data_root)
 
 
-    # 检查模型路径中是否包含特定字符串
     if args.model_path:
         lower_str = args.model_path.lower()
         model_mapping = {
@@ -839,7 +704,6 @@ if __name__ == "__main__":
 
         print("results:", results)
 
-        # Find the matching model
         model_type = next((model_mapping[key] for key, found in results.items() if found), None)
 
         if model_type:
@@ -852,31 +716,25 @@ if __name__ == "__main__":
         exit()
 
 
-    # 根据model_type动态导入模块
     if model_type in model_type_to_module:
         module_name = model_type_to_module[model_type]
         globals()[module_name] = __import__(module_name)
     else:
         raise ValueError(f"Unsupported model type: {model_type}")
 
-    #加载模型和processor
     model, processor = load_VLM_model(args.model_path, model_type)
 
     objects = args.objects.split(',')
 
-    # 加载数据集
     dataset_path = os.path.join(args.data_root,args.dataset)    
     dataset_processor = SegmentationLabelProcessor(dataset_path, args.scene)
     res_img={}
     result=[]
     json_file = f'./results/{model_type}_{args.dataset}_{args.eval_type}_{args.attention_type}.json'
-    # if os.path.exists(json_file):
-    #     os.remove(json_file)
-    # 按图片进行遍历检测，单张图片把所有的目标都检测出来
     LIMIT = 1000000
     print(f"length of dataset_processor:{len(dataset_processor)}")
     NUM = len(dataset_processor) if len(dataset_processor) < LIMIT else LIMIT
-    for item in tqdm(range(NUM), desc="Processing images"): #2D array类型数据
+    for item in tqdm(range(NUM), desc="Processing images"):
         label, ir_img, vi_img, file_name = dataset_processor[item]
         if args.scene == "DAY":
             SCENE = "DAY"
@@ -891,51 +749,33 @@ if __name__ == "__main__":
                 print("ERROR in scene. Please check the scene.")
                 exit()
 
-        for i in range(len(objects)+1):# 从1开始
+        for i in range(len(objects)+1):
             if dataset_processor.check_class_exists(label, i):
-                label_mask = dataset_processor.extract_mask(label, i) # 获得对应目标的准确mask
+                label_mask = dataset_processor.extract_mask(label, i)
                 object = objects[i-1]
                 object = object.replace("_", " ")
-                if args.eval_type == "Orin": #进行原始的计算方式
+                if args.eval_type == "Orin":
                     atten_map,eval_results = generate_lvlm_map(model, processor, ir_img, vi_img, label_mask, object, model_type)
 
-                elif args.eval_type == "Fusion": #进行融合的计算方式
+                elif args.eval_type == "Fusion":
                     atten_map,eval_results = get_fusion_attention_map(model, processor, ir_img, vi_img, label_mask, object, args.attention_type, model_type, SCENE)
-                    # print(eval_results)
-                elif args.eval_type == "Enhance": #进行增强的计算方式
+                elif args.eval_type == "Enhance":
                     atten_map,eval_results = get_enhance_attention_map(model, processor, ir_img, vi_img, label_mask, object, args.attention_type, model_type, SCENE)
 
                 else:
                     print("ERROR in attention_type. Please check the attention_type.")
                     exit()
-                # print(atten_map)
-                # def count_ones_in_2d_array(arr):
-                #     count = 0
-                #     for row in arr:
-                #         count += row.count(1)  # 计算每一行中1的个数并累加
-                #     return count
 
-                # print(count_ones_in_2d_array(atten_map)) 
-                # print(eval_results)
 
                 result.append(eval_results)
 
-                # 可视化检测结果代码
-                #--------------------------------
-                # 展示融合后与GT的对比结果
                 visualize_atten_map(dataset_processor.vi_path+f'/{file_name}', atten_map, label_mask, file_name, object, "VI")
                 visualize_atten_map(dataset_processor.ir_path+f'/{file_name}', atten_map, label_mask, file_name, object, "IR")
                 
-                # 展示可见光与红外的GT的示意图
-                # visualize_GT_map(dataset_processor.vi_path+f'/{file_name}', dataset_processor.ir_path+f'/{file_name}', label_mask, file_name, object)
-                #--------------------------------
             else:
                 continue
             
-            # res_img[f"{dataset_processor.file_list[item].split('.')[0]}_{object}"] = eval_results
-            # append_to_json_lines(res_img, json_file)
 
-    # for num save   
     model_name = (args.model_path).split('/')[-1]
     if args.eval_type == "Enhance":
         folder = "enhance_results"
@@ -945,8 +785,6 @@ if __name__ == "__main__":
         folder = "orin_results"
     os.makedirs(f"./{folder}", exist_ok=True)
     with open(f"./{folder}/{model_name}_{args.num}_{dataset_processor.dataset_type}_output_{args.dataset}_{args.eval_type}_{args.attention_type}.txt", "a") as file:
-    # for normal detection save
-    # with open(f"./results/{model_name}_{dataset_processor.dataset_type}_output_{args.dataset}_{args.eval_type}_{args.attention_type}.txt", "a") as file:    
         sum_param1 = 0
         sum_param2 = 0
         sum_param3 = 0
@@ -962,7 +800,6 @@ if __name__ == "__main__":
             sum_param4 += row[3]
 
 
-        # 计算平均值
         avg_param1 = round(100 * sum_param1 / n, 2)
         avg_param2 = round(100 * sum_param2 / n, 2)
         avg_param3 = round(100 * sum_param3 / n, 2)
@@ -972,13 +809,4 @@ if __name__ == "__main__":
         file.write(str([args.model_path,avg_param1,avg_param2,avg_param3,avg_param4])+ '\n')
   
 
-        # import datetime
-        # timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")          
-        # f.write(f"[{timestamp}]")
             
-        # accuracy_rec = sum(object_rec_result) / len(object_rec_result)
-        # accuracy_sim_res = sum(object_sim_res_result) / len(object_sim_res_result)
-        # accuracy_res = sum(object_res_result) / len(object_res_result)
-        # result_str = f"数据集：{args.dataset}，模型类别：{type}，输出方式：{args.eval_type}，目标类型：{object}，阈值：{args.threshold}，次数：{NUM}，有效评估次数：{count}，REC：{accuracy_rec}，SIM_RES：{accuracy_sim_res}，RES：{accuracy_res}"
-        # print(result_str)
-        # f.write(result_str + '\n')

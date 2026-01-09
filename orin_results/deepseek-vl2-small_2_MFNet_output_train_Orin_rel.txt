@@ -1,2 +1,0 @@
-all_inference:2755
-['/data/VLM/deepseek-vl2-small', 34.52, 21.52, 17.15, 34.52]

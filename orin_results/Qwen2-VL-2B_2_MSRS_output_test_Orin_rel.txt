@@ -1,2 +1,0 @@
-all_inference:1251
-['/data/VLM/Qwen2-VL-2B', 1.98, 1.44, 0.65, 1.98]

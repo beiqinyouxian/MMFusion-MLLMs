@@ -1,4 +1,3 @@
-# 处理代码加载
 from matplotlib.pylab import true_divide
 import torch
 import os
@@ -8,8 +7,6 @@ import skimage.io as io
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import model_methods
-# from pycocotools.coco import COCO
-# from pycocotools import mask
 from transformers import AutoModel, AutoTokenizer
 model_type_to_module = {
     "qwen2.5vl": "model_methods.qwen2_5_methods",
@@ -54,13 +51,12 @@ def load_VLM_model(model_path, model_type):
             torch_dtype=torch.bfloat16,
             low_cpu_mem_usage=True,
             attn_implementation="eager",
-            device_map="auto"  # 自动分配到可用GPU
+            device_map="auto"
         )
         llava_processor = model_methods.llava_methods.LlavaProcessor.from_pretrained(model_path, patch_size=14, use_fast=True)
         return llava_model, llava_processor
     elif model_type == "deepseek_vl2":
         vl2_chat_processor: model_methods.deepseekvl2_methods.DeepseekVLV2Processor = model_methods.deepseekvl2_methods.DeepseekVLV2Processor.from_pretrained(model_path)
-        # tokenizer = vl_chat_processor.tokenizer
         device_map = model_methods.deepseekvl2_methods.split_model(model_path)
         vl2_gpt: model_methods.deepseekvl2_methods.DeepseekVLV2ForCausalLM = model_methods.deepseekvl2_methods.AutoModelForCausalLM.from_pretrained(
             model_path, 
@@ -68,8 +64,6 @@ def load_VLM_model(model_path, model_type):
             torch_dtype=torch.bfloat16,
             device_map=device_map
         ).eval()
-        # vl2_gpt: DeepseekVLV2ForCausalLM = deepseekvl2_methods.AutoModelForCausalLM.from_pretrained(model_path, trust_remote_code=True)
-        # vl2_gpt = vl2_gpt.to(torch.bfloat16).cuda().eval()
         return vl2_gpt, vl2_chat_processor
 
     elif model_type == "deepseek_vl":
@@ -94,7 +88,6 @@ def load_VLM_model(model_path, model_type):
         exit()
 
 
-# 注意力图生成
 
 from utils import *
 from PIL import Image, ImageDraw
@@ -104,14 +97,11 @@ import numpy as np
 
 def generate_all_head_attention_map(model, processor, image, object, label, attention_type, model_type):
    
-    # 输入到其中返回一个list，list中每个元素是一个字典，字典中包含layer/head对应的注意力图
     if model_type == "llava":
         if "7" in args.model_path:
-            # 7B
             LAYERS=32
             HEADS=32
         elif "13" in args.model_path:
-            # 13B
             LAYERS=40
             HEADS=40
         general_question = 'Write a general description of the image.'
@@ -122,21 +112,16 @@ def generate_all_head_attention_map(model, processor, image, object, label, atte
             print("image size is greater than 1024, use high_res")
             exit()
         else:
-            # print("image size is less than 1024, use norm_res")
             if attention_type == "orin":
                 att_results,eval_results = norm_res(model_methods.llava_methods.auto_param_orin_attention_llava, image, prompt, general_prompt, model, processor, label, LAYERS, HEADS)
             elif attention_type == "rel":
                 att_results,eval_results = norm_res(model_methods.llava_methods.auto_param_rel_attention_llava, image, prompt, general_prompt, model, processor, label, LAYERS, HEADS)
 
-        # 返回的att_results是一个字典，字典中键和值包含layer/head对应的注意力图
-    # Qwen待修改
     elif model_type == "qwen2.5vl":
         if "3" in args.model_path:
-            # 3B
             LAYERS=36
             HEADS=16
         elif "7" in args.model_path:
-            # 7B
             LAYERS=28
             HEADS=28
         prompt = f"{object}"
@@ -180,7 +165,6 @@ def generate_all_head_attention_map(model, processor, image, object, label, atte
     return att_results,eval_results
 
 def get_fusion_attention_map(model, processor, ir_img, vi_img, label, object, attention_type, model_type):
-    # 与正常进行detection的方法不同，此处norm_res就会自动返回评估指标，所以不需要再进行评估指标的计算
     model_att_results={}
     model_eval_results={}
     
@@ -198,20 +182,10 @@ class CustomEncoder(json.JSONEncoder):
             return float(obj)
         elif isinstance(obj, np.integer):
             return int(obj)
-        # 还可以添加其他需要处理的类型
         return super(CustomEncoder, self).default(obj)
 
 def append_to_json_lines(new_dict, filename):
-    """
-    以JSON Lines格式向文件追加数据
-    
-    参数:
-        new_dict (dict): 要添加的字典
-        filename (str): JSON文件名
-    """    
     with open(filename, 'a', encoding='utf-8') as f:
-        # 确保每行是一个完整的JSON对象
-        # f.write(json.dumps(new_dict, ensure_ascii=False) + '\n')
         f.write(json.dumps(new_dict, ensure_ascii=False, cls=CustomEncoder) + '\n')
 
 
@@ -232,15 +206,11 @@ class SegmentationLabelProcessor:
         self.vi_path = os.path.join(dataset_path,"vi")
         self.label_path = os.path.join(dataset_path,"Segmentation_labels")
         self.file_list = os.listdir(self.label_path)
-        # 根据scene参数过滤文件列表
         if scene == "DAY":
-            # 只保留文件名末尾为D结尾的文件，例如：00020D.png
             self.file_list = [f for f in self.file_list if f.endswith('D.png') or f.endswith('D.jpg') or f.endswith('D.jpeg')]
         elif scene == "NIGHT":
-            # 只保留文件名末尾为N结尾的文件
             self.file_list = [f for f in self.file_list if f.endswith('N.png') or f.endswith('N.jpg') or f.endswith('N.jpeg')]
         elif scene == "ALL":
-            # 保持现在的逻辑，不进行过滤
             pass
         else:
             print(f"Warning: Unknown scene parameter '{scene}', using all files.")
@@ -253,15 +223,12 @@ class SegmentationLabelProcessor:
         return label, ir_img, vi_img, file_name
 
     def __len__(self):
-        """返回数据集的总项目数"""
         return len(self.file_list)
     def imread(self, path):
-        """读取PNG格式的分割标签图像"""
         label = np.array(Image.open(path))
         return label
     
     def get_palette(self):
-        """定义并返回类别调色板"""
         unlabelled = [0, 0, 0]
         car = [64, 0, 128]
         person = [64, 64, 0]
@@ -278,16 +245,6 @@ class SegmentationLabelProcessor:
         ])
     
     def extract_mask(self, label, class_id):
-        """
-        提取特定类别的掩码
-        
-        参数:
-        label: 标签数组(类别ID)
-        class_id: 想要提取的类别ID
-        
-        返回:
-        mask: 二值掩码，目标类别位置为1，其他为0
-        """
         if self.dataset_type == "MSRS" or self.dataset_type == "MFNet":
             mask = np.zeros_like(label, dtype=np.uint8)
             mask[label == class_id] = 1
@@ -299,18 +256,16 @@ class SegmentationLabelProcessor:
         return mask
     
     def check_class_exists(self, label, class_id):
-        """检查标签中是否存在特定类别ID"""
         unique_classes = np.unique(label)
         return class_id in unique_classes
 
 if __name__ == "__main__":
 
-    random.seed(42)  # 设置随机种子为42
+    random.seed(42)
     
-    import argparse    # 创建命令行参数解析器
+    import argparse
     parser = argparse.ArgumentParser(description='Process command line arguments')
 
-    # 添加参数定义
     parser.add_argument('--threshold', type=float, help='Threshold value')
     parser.add_argument('--dataset', help='Dataset name')
     parser.add_argument('--objects', help='Split method')
@@ -320,10 +275,8 @@ if __name__ == "__main__":
     parser.add_argument('--model_path', help='Path to the model')
     parser.add_argument('--data_root', help='Root directory for data')
 
-    # 解析命令行参数
     args = parser.parse_args()
 
-    # 打印参数值
     print("threshold:", args.threshold)
     print("dataset:", args.dataset)
     print("objects:", args.objects)
@@ -334,7 +287,6 @@ if __name__ == "__main__":
     print("data_root:", args.data_root)
 
 
-    # 检查模型路径中是否包含特定字符串
     if args.model_path:
         lower_str = args.model_path.lower()
         model_mapping = {
@@ -351,7 +303,6 @@ if __name__ == "__main__":
 
         print("results:", results)
 
-        # Find the matching model
         model_type = next((model_mapping[key] for key, found in results.items() if found), None)
 
         if model_type:
@@ -364,19 +315,16 @@ if __name__ == "__main__":
         exit()
 
 
-    # 根据model_type动态导入模块
     if model_type in model_type_to_module:
         module_name = model_type_to_module[model_type]
         globals()[module_name] = __import__(module_name)
     else:
         raise ValueError(f"Unsupported model type: {model_type}")
 
-    #加载模型和processor
     model, processor = load_VLM_model(args.model_path, model_type)
 
     objects = args.objects.split(',')
 
-    # 加载数据集
     dataset_path = os.path.join(args.data_root,args.dataset)    
     dataset_processor = SegmentationLabelProcessor(dataset_path, args.scene)
     dataset_name = os.path.basename(os.path.normpath(args.data_root))
@@ -389,22 +337,19 @@ if __name__ == "__main__":
         os.remove(vi_json_file)
     if os.path.exists(ir_json_file):
         os.remove(ir_json_file)
-    # 按图片进行遍历检测，单张图片把所有的目标都检测出来
     LIMIT = 80
     print(f"length of dataset_processor:{len(dataset_processor)}")
     NUM = len(dataset_processor) if len(dataset_processor) < LIMIT else LIMIT
-    for item in tqdm(range(NUM), desc="Processing images"): #2D array类型数据
+    for item in tqdm(range(NUM), desc="Processing images"):
         label, ir_img, vi_img, file_name = dataset_processor[item]
-        for i in range(len(objects)+1):# 从1开始
+        for i in range(len(objects)+1):
             if dataset_processor.check_class_exists(label, i):
-                label_mask = dataset_processor.extract_mask(label, i) # 获得对应目标的准确mask
+                label_mask = dataset_processor.extract_mask(label, i)
                 object = objects[i-1]
                 object = object.replace("_", " ")
 
-                if args.eval_type == "Auto": #进行融合的计算方式
+                if args.eval_type == "Auto":
                     atten_map,eval_results = get_fusion_attention_map(model, processor, ir_img, vi_img, label_mask, object, args.attention_type, model_type)
-                    # 此处获得的是每个图片中每个目标的注意力图，以及每个目标的评估指标（所有层和所有注意力头）
-                    # 所以把每条eval_results以增量的形式直接写入json中
                     eval_results_vi={}
                     eval_results_ir={}
                     eval_results_vi[f"{file_name}_{object}"] = eval_results["vi"]
@@ -417,8 +362,6 @@ if __name__ == "__main__":
             else:
                 continue
             
-            # res_img[f"{dataset_processor.file_list[item].split('.')[0]}_{object}"] = eval_results
-            # append_to_json_lines(res_img, json_file)
 
         
   

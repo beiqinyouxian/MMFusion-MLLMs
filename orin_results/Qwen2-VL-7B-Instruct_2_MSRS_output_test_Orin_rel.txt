@@ -1,4 +1,0 @@
-all_inference:1251
-['/data/VLM/Qwen2-VL-7B-Instruct', 35.24, 22.78, 18.83, 35.24]
-all_inference:1251
-['/data/VLM/Qwen2-VL-7B-Instruct', 35.24, 22.78, 18.83, 35.24]

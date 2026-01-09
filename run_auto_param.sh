@@ -4,7 +4,7 @@
 # export CUDA_VISIBLE_DEVICES=0,1,2,3
 
 export CUDA_VISIBLE_DEVICES=3,2,1,0
-# 创建结果目录
+
 
 DATASET='test'
 SPLITBY="car,person,bike,curve,car_stop,guardrail" #MSRS,MFNet

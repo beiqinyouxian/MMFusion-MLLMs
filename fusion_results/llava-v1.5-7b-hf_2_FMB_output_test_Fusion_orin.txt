@@ -1,2 +1,0 @@
-all_inference:2602
-['/data/VLM/llava-v1.5-7b-hf', 68.33, 3.93, 7.31, 73.6]
