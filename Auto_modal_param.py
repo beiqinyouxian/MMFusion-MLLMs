@@ -337,7 +337,7 @@ if __name__ == "__main__":
         os.remove(vi_json_file)
     if os.path.exists(ir_json_file):
         os.remove(ir_json_file)
-    LIMIT = 80
+    LIMIT = 100
     print(f"length of dataset_processor:{len(dataset_processor)}")
     NUM = len(dataset_processor) if len(dataset_processor) < LIMIT else LIMIT
     for item in tqdm(range(NUM), desc="Processing images"):
